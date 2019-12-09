@@ -1,4 +1,4 @@
-# RHOSD 2019 - Cosa puoi fare con ansible in 1200 secondi
+# RHOSD 2019 - Cosa puoi fare con Ansible in 1200 secondi
 Inside the repository is possibile to collect all the files used during the RedHat OpenSource Day 2019 in Rome and Milan about our speech "Cosa puoi fare con Ansible in 1200 secondi".
 With our **init-ocp-host.yml** is possible to prepare your hosts for an OpenShift Container Platform 3.11 in order to start the prerequisite and deploy_cluster playbooks provided by the OKD Community.
 
