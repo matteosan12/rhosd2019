@@ -1,0 +1,79 @@
+---
+- name: Host preparation for OCP infrastructure
+  gather_facts: false
+  hosts: all
+  tasks:
+  - name: Install needed pkgs
+    yum:
+      name: 
+        - python
+        - wget
+        - git
+        - net-tools
+        - bind-utils
+        - yum-utils
+        - iptables-services
+        - bridge-utils
+        - bash-completion
+        - kexec-tools
+        - sos
+        - psacct
+        - python-docker-py
+      state: latest
+  - name: Update all pkgs
+    yum:
+      name: '*'
+      state: latest
+    notify:
+      - reboot_server
+  - name: Install EPEL repo
+    yum:
+      name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      state: present
+  - name: Disable Global Enabled EPEL repos
+    lineinfile:
+      path: /etc/yum.repos.d/epel.repo
+      regexp: '^enabled=1'
+      line: 'enabled=0'
+  - name: Install Ansible and pyOpenSSL
+    yum:
+      name:
+        - ansible
+        - pyOpenSSL
+      state: present
+      enablerepo: epel
+  - name: Install Docker
+    yum:
+      name: docker-1.13.1
+      state: present
+  - name: Create device for docker 
+    shell: "dd if=/dev/zero of=/srv/disk-loop count=5120 bs=1M"
+  - name: Setup loop device
+    shell: "losetup /dev/loop0 /srv/disk-loop"
+  - name: Populate docker-storage-setup
+    blockinfile:
+      path: /etc/sysconfig/docker-storage-setup
+      block: |
+        DEVS=/dev/loop0                                                                                                                                                                              
+        VG=docker-vg                                                                                                                                                                                 
+        DATA_SIZE="95%VG"                                                                                                                                                                            
+        STORAGE_DRIVER=overlay2                                                                                                                                                                      
+        CONTAINER_ROOT_LV_NAME="dockerlv"                                                                                                                                                            
+        CONTAINER_ROOT_LV_MOUNT_PATH="/var/lib/docker"                                                                                                                                               
+        CONTAINER_ROOT_LV_SIZE="100%FREE"                                                                                                                                                            
+        WIPE_SIGNATURES=true
+  - name: Init docker storage
+    shell: docker-storage-setup
+  - name: Verify docker logical volume
+    lvol:
+      lv: dockerlv
+      vg: docker-vg
+      state: present
+  - name: Start and Enable Docker
+    service:
+      name: docker
+      state: started
+      enabled: yes
+  handlers:
+    - name: reboot_server
+      reboot:
