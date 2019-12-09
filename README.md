@@ -39,7 +39,3 @@ Execute the playbook in this way:
 ```
 ansible-playbook -i inventory init-ocp-host.yml
 ```
-
-# Enjoy it!
-
-
